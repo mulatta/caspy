@@ -124,6 +124,11 @@ class Store:
             return False
         return hash_file(path, algorithm=digest.algorithm) == digest
 
+    def validate(self) -> list[Digest]:
+        """Re-hash every stored blob; return the digests whose content no longer
+        matches (an empty list means the whole store is intact)."""
+        return [digest for digest in self if not self.verify(digest)]
+
     # --- removing & listing ----------------------------------------------
 
     def delete(self, digest: Digest) -> bool:

@@ -89,6 +89,19 @@ def test_verify_detects_corruption(tmp_path):
     assert store.verify(d) is False
 
 
+def test_validate_reports_only_corrupted_blobs(tmp_path):
+    store = Store(tmp_path)
+    good = store.put_bytes(b"healthy")
+    bad = store.put_bytes(b"original")
+    assert store.validate() == []  # intact store
+
+    blob = store.path_for(bad)
+    blob.chmod(0o644)
+    blob.write_bytes(b"corrupted")  # external corruption
+    assert store.validate() == [bad]
+    assert store.verify(good) is True
+
+
 def test_delete_and_iterate(tmp_path):
     store = Store(tmp_path)
     a = store.put_bytes(b"one")

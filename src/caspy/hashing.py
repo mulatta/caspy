@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
@@ -27,6 +28,15 @@ def hash_file(path: Path | str, *, algorithm: str = "sha256") -> Digest:
     return Digest(algorithm, hasher.hexdigest())
 
 
-def hash_json(data: Any, *, algorithm: str = "sha256") -> Digest:
-    """Hash the canonical (sorted, compact) JSON encoding of ``data``."""
-    return hash_bytes(canonical_json(data), algorithm=algorithm)
+def hash_json(
+    data: Any,
+    *,
+    algorithm: str = "sha256",
+    default: Callable[[Any], Any] | None = None,
+) -> Digest:
+    """Hash the canonical (sorted, compact) JSON encoding of ``data``.
+
+    ``default`` is forwarded to :func:`caspy.canonical.canonical_json` to encode
+    values JSON cannot represent natively.
+    """
+    return hash_bytes(canonical_json(data, default=default), algorithm=algorithm)

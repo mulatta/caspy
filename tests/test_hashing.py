@@ -48,6 +48,16 @@ def test_hash_json_is_key_order_independent():
     assert hash_json({"a": 1}) != hash_json({"a": 2})
 
 
+def test_hash_json_default_encoder_coerces_unknown_types():
+    from pathlib import PurePosixPath
+
+    path = PurePosixPath("a/b")
+    with pytest.raises(TypeError):  # not JSON-native without a hook
+        hash_json({"path": path})
+    coerced = hash_json({"path": path}, default=lambda o: o.as_posix())
+    assert coerced == hash_json({"path": "a/b"})
+
+
 def test_unknown_algorithm_raises():
     with pytest.raises(ValueError, match="unknown hash algorithm"):
         new_hasher("not-a-real-algo")

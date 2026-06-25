@@ -11,7 +11,7 @@ from __future__ import annotations
 import os
 import shutil
 import tempfile
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from pathlib import Path
 from typing import IO, Any
 
@@ -65,8 +65,10 @@ class Store:
             write_atomic(target, data, mode=self._mode)
         return digest
 
-    def put_json(self, data: Any) -> Digest:
-        return self.put_bytes(canonical_json(data))
+    def put_json(
+        self, data: Any, *, default: Callable[[Any], Any] | None = None
+    ) -> Digest:
+        return self.put_bytes(canonical_json(data, default=default))
 
     def put_file(self, path: Path | str, *, move: bool = False) -> Digest:
         """Store a file's content. ``move=True`` consumes the source."""

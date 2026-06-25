@@ -10,7 +10,7 @@ from caspy.algorithms import new_hasher
 from caspy.canonical import canonical_json
 from caspy.digest import Digest
 
-_CHUNK = 1 << 20  # 1 MiB streaming reads keep large files off the heap.
+_CHUNK = 1 << 20  # 1 MiB; stream large files instead of loading them whole.
 
 
 def hash_bytes(data: bytes, *, algorithm: str = "sha256") -> Digest:

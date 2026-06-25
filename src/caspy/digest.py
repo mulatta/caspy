@@ -12,9 +12,8 @@ _HEX = re.compile(r"^[0-9a-f]+$")
 class Digest:
     """A content hash plus the algorithm that produced it.
 
-    Rendered as ``"<algorithm>:<hexdigest>"`` (e.g. ``"sha256:9f86d0…"``), so a
-    digest is self-describing — the store can hold mixed algorithms and migrate
-    between them without ambiguity.
+    Rendered as ``"<algorithm>:<hexdigest>"`` (e.g. ``"sha256:9f86d0…"``) so a
+    digest is self-describing: the store can hold mixed algorithms unambiguously.
     """
 
     algorithm: str

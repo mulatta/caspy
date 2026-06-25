@@ -1,10 +1,9 @@
 """A keyed cache: memoize a computation on a key derived from its inputs.
 
-Unlike the :class:`~caspy.store.Store` (which addresses content by hashing the
-*output* — dedup), a ``KeyedCache`` maps a key — typically a digest of a
-computation's *inputs* (argv, input file digests, config) — to the output stored
-in a Store. The key→output pointers are small persisted state (file-as-truth, no
-database); the outputs live in the Store and dedup as usual.
+Where a :class:`~caspy.store.Store` addresses content by hashing the *output*, a
+``KeyedCache`` maps a key — typically a digest of the *inputs* (argv, input
+digests, config) — to an output stored in a Store. Key→output pointers are small
+files (no database); outputs live in the Store and dedup as usual.
 """
 
 from __future__ import annotations

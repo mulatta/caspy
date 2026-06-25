@@ -1,9 +1,8 @@
 """The hash-algorithm registry.
 
-The core algorithms come from the stdlib (``hashlib``), so caspy has no required
-dependencies. Non-stdlib algorithms (``blake3``) register themselves lazily when
-first requested, and are only importable if their optional extra is installed.
-A hasher is anything ``hashlib``-shaped: ``.update(bytes)`` + ``.hexdigest()``.
+Core algorithms come from the stdlib (``hashlib``), so caspy has no required deps.
+Non-stdlib algorithms (``blake3``) autoload lazily and only if their optional extra
+is installed. A hasher is anything ``hashlib``-shaped: ``.update(bytes)`` + ``.hexdigest()``.
 """
 
 from __future__ import annotations
@@ -43,7 +42,7 @@ def new_hasher(algorithm: str) -> Hasher:
     return factory()
 
 
-# stdlib built-ins — zero dependency.
+# stdlib built-ins
 for _name in ("sha256", "sha512", "sha3_256", "blake2b", "blake2s"):
     register(_name, partial(hashlib.new, _name))
 

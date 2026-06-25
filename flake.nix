@@ -58,7 +58,7 @@
           default = caspy;
           caspy = pkgs.python3Packages.buildPythonPackage {
             pname = "caspy";
-            version = "0.1.0";
+            version = "0.1.1";
             src = ./.;
             pyproject = true;
             build-system = [ pkgs.python3Packages.hatchling ];

@@ -16,12 +16,12 @@ def write_atomic(
     encoding: str = "utf-8",
     mode: int | None = None,
 ) -> None:
-    """Write ``data`` to ``path`` atomically (temp file in the same dir + rename).
+    """Write ``data`` to ``path`` atomically (temp file in same dir + rename).
 
-    The temp file is fsynced and ``os.replace``d into place, so a concurrent
-    reader observes either the old file or the complete new one, never a partial
-    write. Parent directories are created as needed. ``mode`` sets the final
-    file's permission bits before the rename (e.g. ``0o444`` for read-only).
+    The temp file is fsynced then ``os.replace``d, so a concurrent reader sees
+    either the old file or the complete new one, never a partial write. Parent
+    dirs are created. ``mode`` sets the final permission bits before the rename
+    (e.g. ``0o444`` for read-only).
     """
     target = Path(path)
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -47,8 +47,8 @@ def write_json_atomic(
 ) -> None:
     """Atomically write ``data`` as JSON (human-readable by default).
 
-    For a content hash use ``hash_json`` / ``canonical_json`` instead — this is
-    for writing records, not for hashing them.
+    For hashing use ``hash_json`` / ``canonical_json``; this is for writing
+    records, not for content identity.
     """
     text = json.dumps(data, indent=indent, sort_keys=sort_keys, ensure_ascii=False)
     write_atomic(path, text)

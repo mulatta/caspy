@@ -1,9 +1,9 @@
 """A content-addressed blob store.
 
-Blobs are immutable and named by their content digest, which maps deterministically
-to a sharded path (``root/<algorithm>/<ab>/<cd>/<hexdigest>``) — so the filesystem
-is the index (no database) and identical content deduplicates. Writes go through a
-temp file + atomic rename, so concurrent ``put``/``get`` need no locks.
+Blobs are immutable and named by their content digest, mapping deterministically
+to a sharded path (``root/<algorithm>/<ab>/<cd>/<hexdigest>``): the filesystem is
+the index (no database) and identical content deduplicates. Writes use a temp file
++ atomic rename, so concurrent ``put``/``get`` need no locks.
 """
 
 from __future__ import annotations
@@ -35,9 +35,8 @@ class Store:
         self.algorithm = algorithm
         self._fanout = fanout
         self._depth = depth
-        # Blobs are immutable; writing them read-only (0o444) guards against
-        # accidental in-place modification (delete still works — that needs only
-        # the directory's write bit). Set False to manage permissions yourself.
+        # Read-only (0o444) guards immutable blobs against in-place modification;
+        # delete still works (needs only the dir's write bit). False = caller-managed.
         self._mode = 0o444 if read_only else None
 
     # --- locating ---------------------------------------------------------
@@ -61,7 +60,7 @@ class Store:
     def put_bytes(self, data: bytes) -> Digest:
         digest = hash_bytes(data, algorithm=self.algorithm)
         target = self.path_for(digest)
-        if not target.is_file():  # immutable + content-addressed -> skip rewrite
+        if not target.is_file():  # content-addressed -> identical blob, skip rewrite
             write_atomic(target, data, mode=self._mode)
         return digest
 
@@ -86,13 +85,13 @@ class Store:
                 self._set_mode(target)
                 return digest
             except OSError:
-                pass  # cross-device; fall back to copy
+                pass  # cross-device -> fall back to copy
         fd, tmp = tempfile.mkstemp(dir=target.parent, prefix=".put.", suffix=".tmp")
         try:
             with os.fdopen(fd, "wb") as dst, open(source, "rb") as src:
                 shutil.copyfileobj(src, dst)
                 dst.flush()
-                os.fsync(dst.fileno())  # durable before the rename, like write_atomic
+                os.fsync(dst.fileno())  # durable before rename
             if self._mode is not None:
                 os.chmod(tmp, self._mode)
             os.replace(tmp, target)
@@ -129,8 +128,8 @@ class Store:
         return hash_file(path, algorithm=digest.algorithm) == digest
 
     def validate(self) -> list[Digest]:
-        """Re-hash every stored blob; return the digests whose content no longer
-        matches (an empty list means the whole store is intact)."""
+        """Re-hash every blob; return digests whose content no longer matches
+        (empty list means the store is intact)."""
         return [digest for digest in self if not self.verify(digest)]
 
     # --- removing & listing ----------------------------------------------

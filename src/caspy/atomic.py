@@ -10,13 +10,18 @@ from typing import Any
 
 
 def write_atomic(
-    path: Path | str, data: bytes | str, *, encoding: str = "utf-8"
+    path: Path | str,
+    data: bytes | str,
+    *,
+    encoding: str = "utf-8",
+    mode: int | None = None,
 ) -> None:
     """Write ``data`` to ``path`` atomically (temp file in the same dir + rename).
 
     The temp file is fsynced and ``os.replace``d into place, so a concurrent
     reader observes either the old file or the complete new one, never a partial
-    write. Parent directories are created as needed.
+    write. Parent directories are created as needed. ``mode`` sets the final
+    file's permission bits before the rename (e.g. ``0o444`` for read-only).
     """
     target = Path(path)
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -29,6 +34,8 @@ def write_atomic(
             handle.write(payload)
             handle.flush()
             os.fsync(handle.fileno())
+        if mode is not None:
+            os.chmod(tmp, mode)
         os.replace(tmp, target)
     except BaseException:
         Path(tmp).unlink(missing_ok=True)

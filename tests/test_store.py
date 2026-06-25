@@ -59,11 +59,33 @@ def test_put_file_copy_and_move(tmp_path):
     assert not moved.exists()
 
 
+def test_blobs_are_read_only_by_default(tmp_path):
+    store = Store(tmp_path)
+    blob = store.path_for(store.put_bytes(b"immutable"))
+    assert blob.stat().st_mode & 0o777 == 0o444
+    with pytest.raises(PermissionError):
+        blob.write_bytes(b"tamper")  # the read-only bit blocks accidental writes
+
+
+def test_read_only_false_leaves_blobs_writable(tmp_path):
+    store = Store(tmp_path, read_only=False)
+    blob = store.path_for(store.put_bytes(b"mutable"))
+    assert blob.stat().st_mode & 0o200  # owner-writable
+
+
+def test_delete_works_on_read_only_blobs(tmp_path):
+    store = Store(tmp_path)
+    d = store.put_bytes(b"x")
+    assert store.delete(d) is True  # unlink needs the dir's write bit, not the file's
+
+
 def test_verify_detects_corruption(tmp_path):
     store = Store(tmp_path)
     d = store.put_bytes(b"trustworthy")
     assert store.verify(d) is True
-    store.path_for(d).write_bytes(b"tampered")  # corrupt in place
+    blob = store.path_for(d)
+    blob.chmod(0o644)  # simulate external corruption (bit-rot / privileged write)
+    blob.write_bytes(b"tampered")
     assert store.verify(d) is False
 
 

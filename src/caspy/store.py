@@ -29,11 +29,16 @@ class Store:
         algorithm: str = "sha256",
         fanout: int = 2,
         depth: int = 2,
+        read_only: bool = True,
     ) -> None:
         self.root = Path(root)
         self.algorithm = algorithm
         self._fanout = fanout
         self._depth = depth
+        # Blobs are immutable; writing them read-only (0o444) guards against
+        # accidental in-place modification (delete still works — that needs only
+        # the directory's write bit). Set False to manage permissions yourself.
+        self._mode = 0o444 if read_only else None
 
     # --- locating ---------------------------------------------------------
 
@@ -57,7 +62,7 @@ class Store:
         digest = hash_bytes(data, algorithm=self.algorithm)
         target = self.path_for(digest)
         if not target.is_file():  # immutable + content-addressed -> skip rewrite
-            write_atomic(target, data)
+            write_atomic(target, data, mode=self._mode)
         return digest
 
     def put_json(self, data: Any) -> Digest:
@@ -76,6 +81,7 @@ class Store:
         if move:
             try:
                 os.replace(source, target)  # atomic rename, same filesystem
+                self._set_mode(target)
                 return digest
             except OSError:
                 pass  # cross-device; fall back to copy
@@ -83,6 +89,8 @@ class Store:
         os.close(fd)
         try:
             shutil.copyfile(source, tmp)
+            if self._mode is not None:
+                os.chmod(tmp, self._mode)
             os.replace(tmp, target)
         except BaseException:
             Path(tmp).unlink(missing_ok=True)
@@ -90,6 +98,10 @@ class Store:
         if move:
             source.unlink()
         return digest
+
+    def _set_mode(self, path: Path) -> None:
+        if self._mode is not None:
+            path.chmod(self._mode)
 
     # --- reading ----------------------------------------------------------
 

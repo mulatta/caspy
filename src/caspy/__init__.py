@@ -13,6 +13,7 @@ from caspy.cache import KeyedCache
 from caspy.digest import Digest
 from caspy.hashing import hash_bytes, hash_file, hash_json
 from caspy.store import Store, open_store
+from caspy.versioned import SchemaVersionError, load_versioned_json
 
 __all__ = [
     "Digest",
@@ -26,4 +27,6 @@ __all__ = [
     "Store",
     "open_store",
     "KeyedCache",
+    "load_versioned_json",
+    "SchemaVersionError",
 ]

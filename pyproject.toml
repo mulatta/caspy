@@ -1,0 +1,29 @@
+[project]
+name = "caspy"
+version = "0.1.0"
+description = "A light, general-purpose content-addressable store with hashing, atomic IO, and memoization primitives"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = []
+
+[project.optional-dependencies]
+# Fast hashing for large blobs; the core stays stdlib-only (sha256).
+blake3 = ["blake3>=0.4"]
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "ruff>=0.10",
+    "blake3>=0.4",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/caspy"]
+
+[tool.pytest.ini_options]
+# Run the tests against the src/ tree without an install (dev shells, CI).
+pythonpath = ["src"]

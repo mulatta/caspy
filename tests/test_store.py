@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import os
+
 import pytest
 
 from caspy import Digest, hash_bytes, open_store
@@ -57,6 +59,19 @@ def test_put_file_copy_and_move(tmp_path):
     d2 = store.put_file(moved, move=True)  # move: source consumed
     assert d2 == d
     assert not moved.exists()
+
+
+def test_put_file_fsyncs_copied_data(tmp_path, monkeypatch):
+    # The copy path must fsync the blob before the rename, like write_atomic does;
+    # otherwise a crash could expose a renamed-but-not-durable blob.
+    synced = []
+    real_fsync = os.fsync
+    monkeypatch.setattr(os, "fsync", lambda fd: synced.append(fd) or real_fsync(fd))
+    store = Store(tmp_path)
+    src = tmp_path / "src.bin"
+    src.write_bytes(b"durable")
+    store.put_file(src)
+    assert synced
 
 
 def test_blobs_are_read_only_by_default(tmp_path):

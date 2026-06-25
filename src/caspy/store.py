@@ -86,9 +86,11 @@ class Store:
             except OSError:
                 pass  # cross-device; fall back to copy
         fd, tmp = tempfile.mkstemp(dir=target.parent, prefix=".put.", suffix=".tmp")
-        os.close(fd)
         try:
-            shutil.copyfile(source, tmp)
+            with os.fdopen(fd, "wb") as dst, open(source, "rb") as src:
+                shutil.copyfileobj(src, dst)
+                dst.flush()
+                os.fsync(dst.fileno())  # durable before the rename, like write_atomic
             if self._mode is not None:
                 os.chmod(tmp, self._mode)
             os.replace(tmp, target)

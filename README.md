@@ -10,6 +10,8 @@ atomic-IO, and memoization primitives that go with it.
 - **Filesystem is the index** — no database. Lock-free concurrent `put`/`get`
   via atomic rename.
 - **`KeyedCache`** memoizes a computation on a key derived from its *inputs*.
+- **Integrity** — blobs are written read-only and can be re-hashed individually
+  (`verify`) or store-wide (`validate`).
 
 ## Install
 
@@ -57,9 +59,13 @@ d = store.put_json({"seed": 0})
 store.get_bytes(d)                       # bytes
 with store.open(d) as f: ...             # stream
 store.exists(d); store.verify(d)         # membership / integrity re-hash
+store.validate()                         # whole-store fsck -> corrupted digests
 store.delete(d)
 for digest in store: ...                 # iterate stored blobs
 ```
+
+Blobs are written read-only (`0o444`) by default — immutable by contract; pass
+`Store(root, read_only=False)` to opt out.
 
 ## Keyed cache (memoization)
 

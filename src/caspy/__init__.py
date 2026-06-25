@@ -8,6 +8,7 @@ loading.
 from __future__ import annotations
 
 from caspy.algorithms import available, register
+from caspy.atomic import write_atomic, write_json_atomic
 from caspy.digest import Digest
 from caspy.hashing import hash_bytes, hash_file, hash_json
 
@@ -18,4 +19,6 @@ __all__ = [
     "hash_json",
     "register",
     "available",
+    "write_atomic",
+    "write_json_atomic",
 ]

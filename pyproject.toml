@@ -4,6 +4,9 @@ version = "0.1.0"
 description = "A light, general-purpose content-addressable store with hashing, atomic IO, and memoization primitives"
 readme = "README.md"
 requires-python = ">=3.12"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "mulatta" }]
 dependencies = []
 
 [project.optional-dependencies]

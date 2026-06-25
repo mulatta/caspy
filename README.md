@@ -67,6 +67,22 @@ for digest in store: ...                 # iterate stored blobs
 Blobs are written read-only (`0o444`) by default — immutable by contract; pass
 `Store(root, read_only=False)` to opt out.
 
+### Store vs. `KeyedCache` — which to use
+
+Both persist bytes by digest, but they answer different questions:
+
+- **`Store`** addresses content by hashing the **output** — identical content
+  dedups to one blob. It's an immutable, verifiable record. Reach for it when the
+  bytes must persist as a fact you can re-hash and audit later, independent of how
+  (or whether) they could be reproduced.
+- **`KeyedCache`** maps a key derived from a computation's **inputs** to its
+  output. Reach for it to skip recomputation when the same inputs recur; an entry
+  is a disposable shortcut — if its blob is gone, that's just a miss and you
+  recompute.
+
+In short: a `Store` entry is bytes worth keeping; a `KeyedCache` entry is bytes
+worth not recomputing. (A `KeyedCache` is backed by a `Store`, so the two compose.)
+
 ## Keyed cache (memoization)
 
 Key on a computation's **inputs**, store its **output**:
